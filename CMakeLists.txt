@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 file(STRINGS "version.txt" NLE_VERSION)
 project(nle VERSION ${NLE_VERSION})
 
+add_compile_options(-fprofile-arcs -ftest-coverage -lgcov --coverage)
+add_link_options(-fprofile-arcs -ftest-coverage -lgcov --coverage)
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   message("Debug build.")
   # Unclear if this is even necessary. `dsymutil rlmain -o rlmain.dSYM` seems to

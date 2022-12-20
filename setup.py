@@ -41,8 +41,9 @@ class CMakeBuild(build_ext.build_ext):
         )
         hackdir_path = os.getenv("HACKDIR", output_path.joinpath("nethackdir"))
 
-        os.makedirs(self.build_temp, exist_ok=True)
-        build_type = "Debug" if self.debug else "Release"
+        self.build = 'build'
+        os.makedirs(self.build, exist_ok=True)
+        build_type = "Debug"
 
         generator = "Ninja" if spawn.find_executable("ninja") else "Unix Makefiles"
 
@@ -51,28 +52,29 @@ class CMakeBuild(build_ext.build_ext):
 
         cmake_cmd = [
             "cmake",
-            str(source_path),
-            "-G%s" % generator,
-            "-DPYTHON_SRC_PARENT=%s" % source_path,
+            '-S'
+            '..',
+            "-G %s" % generator,
+            "-D PYTHON_SRC_PARENT=%s" % source_path,
             # Tell cmake which Python we want.
-            "-DPYTHON_EXECUTABLE=%s" % sys.executable,
-            "-DCMAKE_BUILD_TYPE=%s" % build_type,
-            "-DCMAKE_INSTALL_PREFIX=%s" % sys.base_prefix,
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s" % output_path,
-            "-DHACKDIR=%s" % hackdir_path,
-            "-DPYTHON_INCLUDE_DIR=%s" % sysconfig.get_python_inc(),
-            "-DPYTHON_LIBRARY=%s" % sysconfig.get_config_var("LIBDIR"),
-            "-DUSE_SEEDING=%s" % use_seeding,
+            "-D PYTHON_EXECUTABLE=%s" % sys.executable,
+            "-D CMAKE_BUILD_TYPE=%s" % build_type,
+            "-D CMAKE_INSTALL_PREFIX=%s" % sys.base_prefix,
+            "-D CMAKE_LIBRARY_OUTPUT_DIRECTORY=%s" % output_path,
+            "-D HACKDIR=%s" % hackdir_path,
+            "-D PYTHON_INCLUDE_DIR=%s" % sysconfig.get_python_inc(),
+            "-D PYTHON_LIBRARY=%s" % sysconfig.get_config_var("LIBDIR"),
+            "-D USE_SEEDING=%s" % use_seeding,
         ]
 
         build_cmd = ["cmake", "--build", ".", "--parallel"]
         install_cmd = ["cmake", "--install", "."]
 
         try:
-            subprocess.check_call(cmake_cmd, cwd=self.build_temp)
-            subprocess.check_call(build_cmd, cwd=self.build_temp)
+            subprocess.check_call(cmake_cmd, cwd=self.build)
+            subprocess.check_call(build_cmd, cwd=self.build)
             # Installs nethackdir. TODO: Can't we do this with setuptools?
-            subprocess.check_call(install_cmd, cwd=self.build_temp)
+            subprocess.check_call(install_cmd, cwd=self.build)
         except subprocess.CalledProcessError:
             # Don't obscure the error with a setuptools backtrace.
             sys.exit(1)
